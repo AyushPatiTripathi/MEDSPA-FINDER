@@ -110,3 +110,17 @@ h2.hd { font-size: clamp(20px, 2.4vw, 26px); font-weight: 700; margin: 4px 0 4px
   .tiles { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
   .cards { grid-template-columns: 1fr 1fr; }
 }
+
+/* export / plan */
+.exportbox { display: flex; flex-direction: column; gap: 8px; }
+.exportbox label { font-weight: 600; font-size: 13px; }
+.exportbox select { padding: 7px; border: 1px solid var(--line); border-radius: 8px; background: #fff; font: inherit; }
+.exportbox a.btn { text-decoration: none; text-align: center; display: block; }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+.modal[hidden] { display: none; }
+.modal-box { background: #fff; border-radius: 12px; padding: 22px; width: min(680px, 92vw); max-height: 82vh; overflow-y: auto; position: relative; }
+.modal-close { position: absolute; top: 8px; right: 12px; border: 0; background: none; font-size: 26px; cursor: pointer; }
+.plan-body h3 { margin: 14px 0 4px; font-size: 15px; }
+.plan-body p, .plan-body li { font-size: 14px; line-height: 1.5; }
+.plan-body.error { color: #b00020; }
+.empty { color: #6b6475; padding: 16px 0; }

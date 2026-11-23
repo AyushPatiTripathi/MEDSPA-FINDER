@@ -71,17 +71,41 @@
       };
     });
   }
-  const vis2 = (L) => L.filter((p) => on2.has(p.type));
+  // Text filter (debounced input). In a city/sector view it matches practice
+  // names only, and is ignored when it just matched the city's own name.
+  let gridQ = '';
+  let curCity = null; // city key of the current city/sector view, else null
+  const norm = (s) => String(s || '').toLowerCase();
+  const cityMatches = (c) => !!gridQ && norm(c.key).includes(gridQ);
+  const nameMatches = (p) => norm(p.name).includes(gridQ);
+  const vis2 = (L) => {
+    const useQ = gridQ && !(curCity && cityMatches(state.cities.get(curCity)));
+    return L.filter((p) => on2.has(p.type) && (!useQ || nameMatches(p)));
+  };
 
   function renderHome() {
-    const top = [...state.cities.values()].sort((a, b) => b.L.length - a.L.length).slice(0, 12);
+    curCity = null;
+    const filtering = !!gridQ || on2.size < TYPES.length;
+    let cities = [...state.cities.values()].map((c) => {
+      const typed = c.L.filter((p) => on2.has(p.type));
+      const n = cityMatches(c) || !gridQ ? typed.length : typed.filter(nameMatches).length;
+      return { c, n };
+    });
+    cities = cities.filter((x) => x.n > 0).sort((a, b) => b.n - a.n);
+    const total = cities.length;
+    const shown = filtering ? cities.slice(0, 60) : cities.slice(0, 12);
+    const head = filtering
+      ? `<h2 class="hd">${total} matching ${total === 1 ? 'city' : 'cities'}</h2><p class="sub">${total > shown.length ? `Showing the ${shown.length} with the most matches. ` : ''}Counts reflect your filters.</p>`
+      : `<h2 class="hd">Jump to a city</h2><p class="sub">Filter above, or pick a busy one below.</p>`;
     root().innerHTML = `<p class="crumbline">${state.practices.length.toLocaleString()} practices across ${state.cities.size} US cities</p>
-      <h2 class="hd">Jump to a city</h2><p class="sub">Search above, or pick a busy one below.</p>
-      <div class="tiles">${top
-        .map(
-          (c) => `<button class="tile home-tile" data-c="${esc(c.key)}"><span class="num">${c.L.length}</span><b>${esc(c.city)}</b><span class="sub2">${esc(c.state)} · ${esc(c.metro)} metro</span></button>`
-        )
-        .join('')}</div>`;
+      ${head}
+      <div class="tiles">${
+        shown
+          .map(
+            ({ c, n }) => `<button class="tile home-tile" data-c="${esc(c.key)}"><span class="num">${n}</span><b>${esc(c.city)}</b><span class="sub2">${esc(c.state)} · ${esc(c.metro)} metro</span></button>`
+          )
+          .join('') || '<p class="empty">No results. Try a different city, practice name, or type filter.</p>'
+      }</div>`;
     root()
       .querySelectorAll('[data-c]')
       .forEach((b) => (b.onclick = () => (location.hash = 'grid-city-' + slug(b.dataset.c))));
@@ -91,13 +115,14 @@
   function renderCity(key) {
     const c = state.cities.get(key);
     if (!c) return renderHome();
+    curCity = key;
     const secs = sectorsFor(key).map((s) => ({ ...s, shown: vis2(s.items) }));
     root().innerHTML = `<p class="crumbline"><a href="#" id="toHome">All cities</a> &rsaquo; ${esc(c.city)}, ${esc(c.state)}</p>
       <h2 class="hd">${esc(c.city)}: ${vis2(c.L).length} practices</h2><p class="sub">${secs.length > 1 ? 'Pick an area to see its practices.' : 'Showing every practice found in this city.'}</p>
       <div class="tiles">${
         secs
-          .map((s, i) => (s.items.length ? `<button class="tile" data-i="${i}"><span class="num">${s.shown.length}</span><b>${esc(s.label)}</b>${mixBar(s.items)}</button>` : ''))
-          .join('') || '<p class="empty">No practices match the filters.</p>'
+          .map((s, i) => (s.shown.length ? `<button class="tile" data-i="${i}"><span class="num">${s.shown.length}</span><b>${esc(s.label)}</b>${mixBar(s.items)}</button>` : ''))
+          .join('') || '<p class="empty">No practices match your search or filters.</p>'
       }</div>`;
     root().querySelector('#toHome').onclick = (e) => { e.preventDefault(); location.hash = 'grid'; };
     if (secs.length === 1) { location.hash = 'grid-sector-' + slug(key) + '-0'; return; }
@@ -110,6 +135,7 @@
   function renderSector(key, idx) {
     const c = state.cities.get(key);
     if (!c) return renderHome();
+    curCity = key;
     const secs = sectorsFor(key);
     const s = secs[idx];
     if (!s) return renderCity(key);
@@ -126,7 +152,7 @@
         <div class="addr">${esc(p.address)}</div>
         ${p.phone ? `<a class="phone" href="tel:${esc(p.phone.replace(/[^+\d]/g, ''))}">${esc(p.phone)}</a>` : ''}
       </article>`
-        ).join('') || '<p class="empty">No practices match the filters.</p>'
+        ).join('') || '<p class="empty">No practices match your search or filters.</p>'
       }</div>`;
     root().querySelector('#toHome').onclick = (e) => { e.preventDefault(); location.hash = 'grid'; };
     const toCity = root().querySelector('#toCity');
@@ -145,10 +171,19 @@
   function mountSearch() {
     const input = document.getElementById('gridSearch');
     document.getElementById('gridCityList').innerHTML = [...state.cities.keys()].sort().map((k) => `<option value="${esc(k)}">`).join('');
+    let timer;
+    input.oninput = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        gridQ = input.value.trim().toLowerCase();
+        route();
+      }, 150);
+    };
+    // Picking an exact "City, ST" from the suggestions jumps straight to it.
     input.onchange = () => {
       const v = input.value.trim().toLowerCase();
       const key = [...state.cities.keys()].find((k) => k.toLowerCase() === v);
-      if (key) { location.hash = 'grid-city-' + slug(key); input.value = ''; }
+      if (key) { clearTimeout(timer); gridQ = ''; input.value = ''; location.hash = 'grid-city-' + slug(key); }
     };
   }
 

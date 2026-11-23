@@ -32,6 +32,12 @@
         <label class="radiusLabel">Nearby within <input type="range" id="radius" min="1" max="15" value="5"> <b id="radiusVal">5 mi</b></label>
         <div id="pinResult"></div>
       </div>
+      <div class="exportbox">
+        <label for="exportState">Export / plan by state</label>
+        <select id="exportState" aria-label="State"><option value="all">All states</option></select>
+        <a id="csvLink" class="btn" href="/api/export.csv" download>Download CSV</a>
+        <button id="planBtn" class="btn" type="button">Generate plan</button>
+      </div>
       <div class="statelist" id="stateList"></div>
     </aside>
     <div id="map" aria-label="Map of practices"></div>
@@ -41,7 +47,7 @@
     <div class="band">
       <div class="wrap">
         <div class="search-row">
-          <input type="search" id="gridSearch" list="gridCityList" placeholder="Search a city, e.g. Austin, TX" aria-label="Search a city">
+          <input type="search" id="gridSearch" list="gridCityList" placeholder="Filter by city or practice name…" aria-label="Filter by city or practice name">
           <datalist id="gridCityList"></datalist>
         </div>
         <div id="gridView"></div>
@@ -50,11 +56,20 @@
   </section>
 </main>
 
+<div id="planModal" class="modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="planTitle">
+    <button class="modal-close" id="planClose" aria-label="Close">&times;</button>
+    <h2 id="planTitle">Market plan</h2>
+    <div id="planBody" class="plan-body"></div>
+  </div>
+</div>
+
 <script src="/vendor/leaflet/leaflet.js"></script>
 <script src="/vendor/markercluster/leaflet.markercluster.js"></script>
 <script src="/common.js"></script>
 <script src="/map.js"></script>
 <script src="/grid.js"></script>
+<script src="/export.js"></script>
 <script src="/app.js"></script>
 </body>
 </html>

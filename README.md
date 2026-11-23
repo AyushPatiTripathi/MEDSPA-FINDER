@@ -22,3 +22,9 @@ cp .env.example .env
 
 Restart the server. With no key (or a blank one) the app falls back to OpenStreetMap.
 `.env` is gitignored.
+
+## Features
+
+- **Grid filter:** the Grid tab's search box filters cities and practice names as you type; the type chips narrow by practice type.
+- **CSV export:** pick a state in the Map sidebar and click Download CSV (`/api/export.csv?state=NY`, or omit `state` for everything).
+- **AI market plan (optional):** add a free Groq key (https://console.groq.com/keys) as `GROQ_API_KEY` in `.env`, then pick a state and click Generate plan. Plans are generated on demand and not stored.
