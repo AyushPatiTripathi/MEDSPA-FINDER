@@ -1,4 +1,4 @@
-// Real Leaflet map: OpenStreetMap-based tiles, marker clustering so the
+// Real Leaflet map: CARTO Voyager (if a key is configured) or OpenStreetMap tiles, marker clustering so the
 // country view declutters into per-city clusters and resolves into
 // individual practices as you zoom in — this replaces the earlier
 // hand-rolled drill-down with actual geographic zoom.
@@ -8,12 +8,24 @@
   let map, cluster, pinMode = false, pinMarker = null, pinCircle = null, pinLines = [];
   let radius = 5;
 
-  function initMap() {
-    map = L.map('map', { zoomControl: true, minZoom: 3, maxZoom: 18 }).setView([39.5, -98.35], 4);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  // CARTO Voyager when a key is configured, otherwise plain OpenStreetMap.
+  function tileLayer(key) {
+    if (key) {
+      return L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=' + encodeURIComponent(key), {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 19,
+      });
+    }
+    return L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19,
-    }).addTo(map);
+    });
+  }
+
+  function initMap(cartoApiKey) {
+    map = L.map('map', { zoomControl: true, minZoom: 3, maxZoom: 18 }).setView([39.5, -98.35], 4);
+    tileLayer(cartoApiKey).addTo(map);
 
     cluster = L.markerClusterGroup({
       maxClusterRadius: 50,
@@ -180,13 +192,19 @@
     if (map) setTimeout(() => map.invalidateSize(), 0);
   };
 
+  let mapInit = null;
   window.MF_initMapView = function () {
-    if (!map) {
-      initMap();
-      mountChips();
-      mountPinControls();
+    if (!mapInit) {
+      mapInit = fetch('/api/config')
+        .then((r) => (r.ok ? r.json() : {}))
+        .catch(() => ({}))
+        .then((cfg) => {
+          initMap(cfg.cartoApiKey || null);
+          mountChips();
+          mountPinControls();
+        });
     }
-    state.ready.then(() => {
+    Promise.all([mapInit, state.ready]).then(() => {
       mountCitySearch();
       renderStateList();
       refreshMarkers();

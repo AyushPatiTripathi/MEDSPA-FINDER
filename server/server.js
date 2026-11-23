@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const compression = require('compression');
 const path = require('path');
@@ -29,6 +30,11 @@ loadData();
 
 app.use(compression());
 app.use(express.static(path.join(__dirname, '..', 'public'), { maxAge: '1h' }));
+
+// Only the CARTO basemap key is exposed to the client; never add other env vars here.
+app.get('/api/config', (req, res) => {
+  res.json({ cartoApiKey: process.env.CARTO_API_KEY || null });
+});
 
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, count: DATA.practices.length });
