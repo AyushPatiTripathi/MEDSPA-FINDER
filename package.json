@@ -1,0 +1,20 @@
+{
+  "name": "medspa-finder",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Map and grid explorer for medspa / plastic surgery / cosmetic dermatology practice coverage, built for Avishkar onboarding planning.",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "compression": "^1.7.4",
+    "express": "^4.19.2",
+    "leaflet": "^1.9.4",
+    "leaflet.markercluster": "^1.5.3"
+  }
+}

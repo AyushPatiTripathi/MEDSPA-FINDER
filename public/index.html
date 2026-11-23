@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Medspa Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="/vendor/markercluster/MarkerCluster.css">
+<link rel="stylesheet" href="/vendor/markercluster/MarkerCluster.Default.css">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="appbar">
+  <h1>Medspa Finder</h1>
+  <nav class="tabs" role="tablist" aria-label="View">
+    <button class="tab" data-tab="map" role="tab" aria-selected="true">Map</button>
+    <button class="tab" data-tab="grid" role="tab" aria-selected="false">Grid</button>
+  </nav>
+  <div class="stats" id="stats">Loading…</div>
+</header>
+
+<main>
+  <section id="view-map" class="view active" role="tabpanel">
+    <aside class="sidebar">
+      <input type="search" id="citySearch" list="cityList" placeholder="Search a city…" aria-label="Search a city">
+      <datalist id="cityList"></datalist>
+      <div class="chips" id="mapChips"></div>
+      <div class="pinbox">
+        <button id="pinToggle" class="btn" aria-pressed="false">Drop a pin: 3 nearest</button>
+        <label class="radiusLabel">Nearby within <input type="range" id="radius" min="1" max="15" value="5"> <b id="radiusVal">5 mi</b></label>
+        <div id="pinResult"></div>
+      </div>
+      <div class="statelist" id="stateList"></div>
+    </aside>
+    <div id="map" aria-label="Map of practices"></div>
+  </section>
+
+  <section id="view-grid" class="view" role="tabpanel">
+    <div class="band">
+      <div class="wrap">
+        <div class="search-row">
+          <input type="search" id="gridSearch" list="gridCityList" placeholder="Search a city, e.g. Austin, TX" aria-label="Search a city">
+          <datalist id="gridCityList"></datalist>
+        </div>
+        <div id="gridView"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="/vendor/leaflet/leaflet.js"></script>
+<script src="/vendor/markercluster/leaflet.markercluster.js"></script>
+<script src="/common.js"></script>
+<script src="/map.js"></script>
+<script src="/grid.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
