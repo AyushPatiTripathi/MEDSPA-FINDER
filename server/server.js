@@ -78,8 +78,26 @@ app.get('/api/export.csv', (req, res) => {
 
 // ---- AI market plan (Groq) -------------------------------------------
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-// Override with GROQ_MODEL in .env if Groq retires this one.
-const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+const GROQ_MODELS_URL = 'https://api.groq.com/openai/v1/models';
+const PREFERRED_MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
+const SKIP_MODEL = /whisper|tts|guard|vision|playai/i;
+
+// Model-list lookup, cached for the life of the process. Only successful
+// lookups are cached, so a bad key or network blip is retried next call.
+let modelCache = null;
+
+async function pickModel(key) {
+  if (modelCache) return modelCache;
+  const r = await fetch(GROQ_MODELS_URL, { headers: { Authorization: `Bearer ${key}` } });
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error((body.error && body.error.message) || `models request failed (${r.status})`);
+  const ids = (body.data || []).map((m) => m.id).filter(Boolean);
+  let model = ids.includes(PREFERRED_MODEL) ? PREFERRED_MODEL : ids.find((id) => !SKIP_MODEL.test(id));
+  if (!model) throw new Error('No usable chat models are available to this Groq API key');
+  if (model !== PREFERRED_MODEL) console.warn(`Groq model ${PREFERRED_MODEL} unavailable; falling back to ${model}`);
+  modelCache = model;
+  return model;
+}
 
 function summarize(practices, st) {
   const byType = {};
@@ -134,13 +152,15 @@ app.post('/api/plan', async (req, res) => {
 
   const summary = summarize(practices, st);
   try {
+    const GROQ_MODEL = await pickModel(key);
     const r = await fetch(GROQ_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
       body: JSON.stringify({
         model: GROQ_MODEL,
         temperature: 0.4,
-        max_tokens: 1200,
+        max_tokens: 2500,
+        ...(/gpt-oss/.test(GROQ_MODEL) ? { reasoning_effort: 'low' } : {}),
         messages: [
           {
             role: 'system',
@@ -148,7 +168,7 @@ app.post('/api/plan', async (req, res) => {
               'You are a go-to-market analyst for a company selling to aesthetic practices (medspas, plastic surgery, cosmetic dermatology, aesthetic physicians). ' +
               'Given aggregate practice data for one US state, write a concise outreach plan in simple markdown with these labeled sections: ' +
               '"Highest-opportunity cities", "Competitive landscape", "Practice-type mix (under/over-represented)", "Suggested outreach order". ' +
-              'Use only the numbers provided; do not invent data. Be specific and brief, no filler.',
+              'Use only the numbers provided; do not invent data or dates. Use headings and bullet lists only (no tables). Be specific and brief, no filler.',
           },
           { role: 'user', content: 'Practice data summary (JSON):\n' + JSON.stringify(summary) },
         ],
@@ -160,11 +180,14 @@ app.post('/api/plan', async (req, res) => {
       return res.status(502).json({ error: 'Groq request failed: ' + ((body.error && body.error.message) || r.status) });
     }
     const plan = body.choices && body.choices[0] && body.choices[0].message && body.choices[0].message.content;
-    if (!plan) return res.status(502).json({ error: 'Groq returned an empty response' });
+    if (!plan) {
+      const fr = body.choices && body.choices[0] && body.choices[0].finish_reason;
+      return res.status(502).json({ error: 'Groq returned an empty response' + (fr ? ` (finish_reason: ${fr})` : '') });
+    }
     res.json({ plan, model: GROQ_MODEL, scope: 'state', value: st, practices: practices.length });
   } catch (err) {
     console.error('Groq fetch failed', err.message);
-    res.status(502).json({ error: 'Could not reach Groq: ' + err.message });
+    res.status(502).json({ error: 'Groq: ' + err.message });
   }
 });
 
