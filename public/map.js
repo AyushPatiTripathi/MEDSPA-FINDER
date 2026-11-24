@@ -209,6 +209,8 @@
     if (map) setTimeout(() => map.invalidateSize(), 0);
   };
 
+  window.MF_mapRefresh = function () { if (map && cluster) refreshMarkers(); };
+
   let mapInit = null;
   window.MF_initMapView = function () {
     if (!mapInit) {

@@ -58,7 +58,7 @@
       return state;
     });
 
-  // ---- Outreach CRM widget (shared by map popup and grid cards) -------
+  // ---- Outreach CRM widgets (map popup, grid cards, table rows) -------
   const ONBOARDED_BADGE_LABEL = 'AG';
   const safeUrl = (u) => (/^https?:\/\//i.test(u || '') ? u : null);
   const STATUS_FIELDS = [
@@ -66,6 +66,23 @@
     ['meeting_set', 'Meeting set up'],
     ['onboarded', 'Onboarded'],
   ];
+  const CRM_KEYS = ['website', 'contacted', 'meeting_set', 'meeting_date', 'meeting_link', 'onboarded'];
+  const URL_FIELDS = {
+    website: { add: '+ Add website', label: (u) => u.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, ''), placeholder: 'example.com' },
+    meeting_link: { add: '+ Add meeting link', label: () => 'Join', placeholder: 'https://zoom.us/j/…' },
+  };
+
+  // Bumped on every successful save so other tabs know to refresh stale DOM.
+  state.crmVersion = 0;
+
+  // <input type=datetime-local> works in local time without a zone.
+  const toLocalInput = (iso) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
 
   async function patchStatus(p, body) {
     const r = await fetch('/api/practices/' + encodeURIComponent(p.id) + '/status', {
@@ -75,27 +92,34 @@
     });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(d.error || 'Save failed (' + r.status + ')');
-    for (const k of ['website', 'contacted', 'meeting_set', 'onboarded']) p[k] = d[k];
+    for (const k of CRM_KEYS) p[k] = d[k];
+    state.crmVersion++;
   }
 
-  function websiteHtml(p) {
-    const u = safeUrl(p.website);
-    return u
-      ? `<a class="site" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(u.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, ''))}</a> <button type="button" class="linkbtn" data-act="edit-site">edit</button>`
-      : `<button type="button" class="linkbtn" data-act="edit-site">+ Add website</button>`;
+  // One editable URL field (website or meeting link): link + edit, or "+ Add".
+  function urlHtml(p, field) {
+    const cfg = URL_FIELDS[field];
+    const u = safeUrl(p[field]);
+    return `<span class="urlf" data-u="${field}">${
+      u
+        ? `<a class="site" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(cfg.label(u))}</a> <button type="button" class="linkbtn" data-act="edit-url">edit</button>`
+        : `<button type="button" class="linkbtn" data-act="edit-url">${cfg.add}</button>`
+    }</span>`;
   }
+  const checkHtml = (p, f, label) => `<label class="chk"><input type="checkbox" data-f="${f}"${p[f] ? ' checked' : ''}${label ? '' : ` aria-label="${f}"`}>${label ? ' ' + label : ''}</label>`;
+  const dateHtml = (p) => `<input type="datetime-local" class="mdate" data-d="meeting_date" aria-label="Meeting date" value="${toLocalInput(p.meeting_date)}">`;
 
   function crmHtml(p) {
     return `<div class="crm">
-      <div class="crm-site">${websiteHtml(p)}</div>
-      <div class="crm-toggles">${STATUS_FIELDS.map(
-        ([k, label]) => `<label><input type="checkbox" data-f="${k}"${p[k] ? ' checked' : ''}> ${label}</label>`
-      ).join('')}</div>
+      <div class="crm-row">Website: ${urlHtml(p, 'website')}</div>
+      <div class="crm-toggles">${STATUS_FIELDS.map(([k, label]) => checkHtml(p, k, label)).join('')}</div>
+      <div class="crm-row">Meeting: ${dateHtml(p)}</div>
+      <div class="crm-row">Link: ${urlHtml(p, 'meeting_link')}</div>
       <div class="crm-msg" role="status" aria-live="polite"></div>
     </div>`;
   }
 
-  // Wire a container holding crmHtml(p). onChange(p) runs after every successful save.
+  // Wire every CRM control inside `root` (needs one .crm-msg). onChange(p) runs after each successful save.
   function crmBind(root, p, onChange) {
     const msg = root.querySelector('.crm-msg');
     let timer;
@@ -103,13 +127,13 @@
       clearTimeout(timer);
       msg.textContent = text;
       msg.className = 'crm-msg' + (err ? ' err' : text ? ' ok' : '');
-      if (!err && text) timer = setTimeout(() => (msg.textContent = ''), 1500);
+      if (!err && text && text !== 'Saving…') timer = setTimeout(() => (msg.textContent = ''), 1500);
     };
     const save = async (body) => {
       say('Saving…');
       try {
         await patchStatus(p, body);
-        say('\u2713 Saved');
+        say('✓ Saved');
         if (onChange) onChange(p);
         return true;
       } catch (e) {
@@ -119,26 +143,36 @@
     };
     root.querySelectorAll('input[data-f]').forEach((box) => {
       box.onchange = async () => {
-        const f = box.dataset.f;
-        if (!(await save({ [f]: box.checked }))) box.checked = !box.checked;
+        if (!(await save({ [box.dataset.f]: box.checked }))) box.checked = !box.checked;
       };
     });
-    const siteBox = root.querySelector('.crm-site');
-    const wire = () => {
-      const btn = siteBox.querySelector('[data-act="edit-site"]');
-      if (!btn) return;
-      btn.onclick = () => {
-        siteBox.innerHTML = `<form class="siteform"><input type="text" inputmode="url" placeholder="example.com" aria-label="Website" value="${esc(p.website || '')}"><button class="btn" type="submit">Save</button></form>`;
-        const form = siteBox.querySelector('form');
-        form.querySelector('input').focus();
-        form.onsubmit = async (e) => {
-          e.preventDefault();
-          if (await save({ website: form.querySelector('input').value })) { siteBox.innerHTML = websiteHtml(p); wire(); }
+    root.querySelectorAll('input[data-d]').forEach((inp) => {
+      inp.onchange = async () => {
+        const body = { meeting_date: inp.value ? new Date(inp.value).toISOString() : null };
+        if (!(await save(body))) inp.value = toLocalInput(p.meeting_date);
+      };
+    });
+    root.querySelectorAll('.urlf').forEach((box) => {
+      const field = box.dataset.u;
+      const wire = () => {
+        const btn = box.querySelector('[data-act="edit-url"]');
+        if (!btn) return;
+        btn.onclick = () => {
+          box.innerHTML = `<form class="siteform"><input type="text" inputmode="url" placeholder="${URL_FIELDS[field].placeholder}" aria-label="${field}" value="${esc(p[field] || '')}"><button class="btn" type="submit">Save</button></form>`;
+          const form = box.querySelector('form');
+          form.querySelector('input').focus();
+          form.onsubmit = async (e) => {
+            e.preventDefault();
+            if (await save({ [field]: form.querySelector('input').value })) {
+              box.innerHTML = urlHtml(p, field).replace(/^<span[^>]*>|<\/span>$/g, '');
+              wire();
+            }
+          };
         };
       };
-    };
-    wire();
+      wire();
+    });
   }
 
-  window.MF = { TYPES, COL, LBL, esc, slug, mi, state, visible, ONBOARDED_BADGE_LABEL, crmHtml, crmBind };
+  window.MF = { TYPES, COL, LBL, esc, slug, mi, state, visible, ONBOARDED_BADGE_LABEL, crmHtml, crmBind, urlHtml, checkHtml, dateHtml, toLocalInput };
 })();

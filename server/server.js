@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 
 const { Pool } = require('pg');
+const { normalizeUrl } = require('./url');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -37,8 +38,9 @@ loadData();
 // re-importing practices can never touch them and Render restarts don't lose them.
 const pool = process.env.DATABASE_URL ? new Pool({ connectionString: process.env.DATABASE_URL, max: 5 }) : null;
 if (!pool) console.warn('DATABASE_URL not set: outreach status tracking is disabled.');
-const STATUS_DEFAULTS = { website: null, contacted: false, meeting_set: false, onboarded: false };
-const pickStatus = (row) => (row ? { website: row.website, contacted: row.contacted, meeting_set: row.meeting_set, onboarded: row.onboarded } : STATUS_DEFAULTS);
+const STATUS_COLS = ['website', 'contacted', 'meeting_set', 'meeting_date', 'meeting_link', 'onboarded'];
+const STATUS_DEFAULTS = { website: null, contacted: false, meeting_set: false, meeting_date: null, meeting_link: null, onboarded: false };
+const pickStatus = (row) => (row ? Object.fromEntries(STATUS_COLS.map((c) => [c, row[c]])) : STATUS_DEFAULTS);
 
 app.use(compression());
 app.use(express.json({ limit: '10kb' }));
@@ -63,7 +65,7 @@ app.get('/api/practices', async (req, res) => {
   const status = new Map();
   if (pool) {
     try {
-      const { rows } = await pool.query('SELECT practice_id, website, contacted, meeting_set, onboarded FROM practice_status');
+      const { rows } = await pool.query(`SELECT practice_id, ${STATUS_COLS.join(', ')} FROM practice_status`);
       rows.forEach((r) => status.set(r.practice_id, r));
     } catch (err) {
       console.error('practice_status read failed:', err.message);
@@ -86,25 +88,31 @@ app.patch('/api/practices/:id/status', async (req, res) => {
       fields[k] = body[k];
     }
   }
-  if ('website' in body) {
-    let w = body.website === null ? '' : String(body.website).trim();
-    if (w && !/^https?:\/\//i.test(w)) w = 'https://' + w;
-    if (w) {
-      let ok = w.length <= 500;
-      try { ok = ok && /^https?:$/.test(new URL(w).protocol) && new URL(w).hostname.includes('.'); } catch (_) { ok = false; }
-      if (!ok) return res.status(400).json({ error: 'website must be a valid http(s) URL' });
+  for (const k of ['website', 'meeting_link']) {
+    if (k in body) {
+      const u = normalizeUrl(body[k]);
+      if (!u.ok) return res.status(400).json({ error: `${k} must be a valid http(s) URL` });
+      fields[k] = u.value;
     }
-    fields.website = w || null;
+  }
+  if ('meeting_date' in body) {
+    const v = body.meeting_date;
+    if (v === null || v === '') fields.meeting_date = null;
+    else {
+      const d = typeof v === 'string' ? new Date(v) : null;
+      if (!d || Number.isNaN(d.getTime()) || d.getFullYear() < 2000 || d.getFullYear() > 2100) return res.status(400).json({ error: 'meeting_date must be an ISO date-time or null' });
+      fields.meeting_date = d.toISOString();
+    }
   }
   const cols = Object.keys(fields);
-  if (!cols.length) return res.status(400).json({ error: 'Send at least one of: website, contacted, meeting_set, onboarded' });
+  if (!cols.length) return res.status(400).json({ error: 'Send at least one of: ' + STATUS_COLS.join(', ') + '' });
 
   try {
     // Only the columns present in the request are overwritten on conflict.
     const sql =
       `INSERT INTO practice_status (practice_id, ${cols.join(', ')}) VALUES ($1, ${cols.map((_, i) => '$' + (i + 2)).join(', ')}) ` +
       `ON CONFLICT (practice_id) DO UPDATE SET ${cols.map((c) => `${c} = EXCLUDED.${c}`).join(', ')}, updated_at = now() ` +
-      'RETURNING website, contacted, meeting_set, onboarded';
+      `RETURNING ${STATUS_COLS.join(', ')}`;
     const { rows } = await pool.query(sql, [id, ...cols.map((c) => fields[c])]);
     res.json({ ...practice, ...pickStatus(rows[0]) });
   } catch (err) {

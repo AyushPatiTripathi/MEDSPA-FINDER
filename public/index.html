@@ -17,6 +17,7 @@
   <nav class="tabs" role="tablist" aria-label="View">
     <button class="tab" data-tab="map" role="tab" aria-selected="true">Map</button>
     <button class="tab" data-tab="grid" role="tab" aria-selected="false">Grid</button>
+    <button class="tab" data-tab="table" role="tab" aria-selected="false">Table</button>
   </nav>
   <div class="stats" id="stats">Loading…</div>
 </header>
@@ -54,6 +55,24 @@
       </div>
     </div>
   </section>
+
+  <section id="view-table" class="view" role="tabpanel">
+    <div class="tablewrap">
+      <div class="table-bar">
+        <input type="search" id="tableSearch" placeholder="Filter by name or city…" aria-label="Filter by name or city">
+        <select id="tableStatus" aria-label="Status filter">
+          <option value="all">All</option>
+          <option value="not_contacted">Not contacted</option>
+          <option value="contacted">Contacted</option>
+          <option value="meeting_set">Meeting set</option>
+          <option value="onboarded">Onboarded</option>
+        </select>
+        <span id="tableCount" class="muted"></span>
+        <span class="pager"><button class="btn" id="tablePrev" type="button">&lsaquo; Prev</button> <span id="tablePage"></span> <button class="btn" id="tableNext" type="button">Next &rsaquo;</button></span>
+      </div>
+      <div class="table-scroll"><table class="crmtable" id="crmTable"></table></div>
+    </div>
+  </section>
 </main>
 
 <div id="planModal" class="modal" hidden>
@@ -69,6 +88,7 @@
 <script src="/common.js"></script>
 <script src="/map.js"></script>
 <script src="/grid.js"></script>
+<script src="/table.js"></script>
 <script src="/export.js"></script>
 <script src="/app.js"></script>
 </body>

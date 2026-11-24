@@ -206,6 +206,10 @@
     if (document.getElementById('view-grid').classList.contains('active')) route();
   });
 
+  window.MF_gridRefresh = function () {
+    if (state.cities.size) route();
+  };
+
   window.MF_initGridView = function () {
     state.ready.then(() => {
       mountSearch();

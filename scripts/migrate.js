@@ -10,8 +10,13 @@ CREATE TABLE IF NOT EXISTS practice_status (
   contacted     BOOLEAN NOT NULL DEFAULT false,
   meeting_set   BOOLEAN NOT NULL DEFAULT false,
   onboarded     BOOLEAN NOT NULL DEFAULT false,
+  meeting_date  TIMESTAMPTZ,
+  meeting_link  TEXT,
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
-);`;
+);
+-- For databases created before the meeting fields existed:
+ALTER TABLE practice_status ADD COLUMN IF NOT EXISTS meeting_date TIMESTAMPTZ;
+ALTER TABLE practice_status ADD COLUMN IF NOT EXISTS meeting_link TEXT;`;
 
 (async () => {
   if (!process.env.DATABASE_URL) {
@@ -22,7 +27,7 @@ CREATE TABLE IF NOT EXISTS practice_status (
   try {
     await client.connect();
     await client.query(SQL);
-    console.log('practice_status table is ready.');
+    console.log('practice_status table is ready (schema up to date).');
   } catch (e) {
     console.error('Migration failed: ' + e.message);
     process.exitCode = 1;

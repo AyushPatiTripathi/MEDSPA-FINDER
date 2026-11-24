@@ -140,3 +140,30 @@ h2.hd { font-size: clamp(20px, 2.4vw, 26px); font-weight: 700; margin: 4px 0 4px
 .onboardedIcon { position: relative; }
 .dotMarker.onboarded { width: 16px; height: 16px; margin: 3px; box-shadow: 0 0 0 3px #f5b800, 0 0 0 4px #7a5a00; }
 .agLabel { position: absolute; left: 50%; top: -9px; transform: translateX(-50%); background: #f5b800; color: #3a2a00; font-size: 9px; font-weight: 800; line-height: 1; padding: 1px 3px; border-radius: 4px; pointer-events: none; }
+
+/* meeting fields + table tab */
+.crm-row { margin: 4px 0; }
+.crm .mdate { font: inherit; font-size: 12px; padding: 2px 4px; border: 1px solid var(--line); border-radius: 6px; max-width: 100%; }
+#view-table.active { display: block; overflow: auto; }
+.tablewrap { padding: 14px 18px; }
+.table-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.table-bar input[type=search] { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; min-width: 240px; }
+.table-bar select { padding: 8px; border: 1px solid var(--line); border-radius: 8px; font: inherit; background: #fff; }
+.table-bar .pager { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.crmtable { border-collapse: collapse; width: 100%; font-size: 13px; }
+.crmtable th, .crmtable td { padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; vertical-align: middle; }
+.crmtable th { position: sticky; top: 0; background: #faf6f2; font-weight: 700; }
+.crmtable th.sortable { cursor: pointer; user-select: none; }
+.crmtable th.sortable:hover { background: #f2ebe4; }
+.crmtable td.c { text-align: center; }
+.crmtable .crm-msg { min-width: 70px; }
+.crmtable .mdate { font: inherit; font-size: 12px; padding: 2px 4px; border: 1px solid var(--line); border-radius: 6px; }
+.crmtable .rname { max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
+.crmtable .siteform input { width: 150px; flex: none; }
+button.linkbtn { all: unset; color: #1f7a96; cursor: pointer; text-decoration: underline; font-size: 12px; }
+button.linkbtn:focus-visible { outline: 2px solid #1f7a96; outline-offset: 2px; }
+.table-bar input[type=search] { width: 260px; flex: none; }
+.table-bar .pager, .table-bar .pager span { white-space: nowrap; }
+.table-bar .pager .btn { padding: 6px 12px; width: auto; }
+.crmtable a.site { color: #1f7a96; }

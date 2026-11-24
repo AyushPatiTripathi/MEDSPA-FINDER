@@ -52,6 +52,18 @@ This data is stored in Postgres, not on disk, so it survives Render's restarts a
 
 1. Create a free database at https://neon.tech (no credit card, doesn't expire) and copy the connection string from the dashboard.
 2. Put it in `.env` (and in Render's environment variables) as `DATABASE_URL`. It looks like `postgresql://user:password@ep-xxxx.us-east-2.aws.neon.tech/neondb?sslmode=require`.
-3. Run `npm run migrate` once to create the table (safe to re-run).
+3. Run `npm run migrate` once to create the table (safe to re-run, and also adds the meeting columns to an older table).
 
 Without `DATABASE_URL` the app still runs; the toggles just show an error when you try to save. Add `DATABASE_URL` (`sync: false`) to the Render service's env vars as well.
+
+### Table tab and meeting fields
+
+Each practice also has a meeting date and a meeting link (shown as "Join"), editable in the map popup, grid cards and the **Table** tab. The Table tab lists every practice (50 per page) with sortable columns, a name/city filter and a status filter, and every CRM field is editable inline. It opens sorted by meeting date: upcoming meetings soonest first, then past ones, then practices with no meeting.
+
+### Bulk-importing websites
+
+```
+node scripts/import-websites.js websites.csv
+```
+
+The CSV needs `id` (matching `id` in `data/practices.json`) and `website` columns. It only sets the website on existing practices; rows with an unknown id, a blank website or an invalid URL are skipped and counted in the summary. It writes straight to Postgres (`DATABASE_URL`) and is safe to re-run.
