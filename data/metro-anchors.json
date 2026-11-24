@@ -1,0 +1,527 @@
+[
+ {
+  "metro": "New York",
+  "city": "New York",
+  "state": "NY",
+  "lat": 40.75111,
+  "lng": -73.98186
+ },
+ {
+  "metro": "New York",
+  "city": "Paramus",
+  "state": "NJ",
+  "lat": 40.94255,
+  "lng": -74.06956
+ },
+ {
+  "metro": "New York",
+  "city": "White Plains",
+  "state": "NY",
+  "lat": 41.03044,
+  "lng": -73.76556
+ },
+ {
+  "metro": "Los Angeles",
+  "city": "Beverly Hills",
+  "state": "CA",
+  "lat": 34.06723,
+  "lng": -118.39482
+ },
+ {
+  "metro": "Los Angeles",
+  "city": "Santa Monica",
+  "state": "CA",
+  "lat": 34.02996,
+  "lng": -118.48472
+ },
+ {
+  "metro": "Los Angeles",
+  "city": "Newport Beach",
+  "state": "CA",
+  "lat": 33.62976,
+  "lng": -117.89123
+ },
+ {
+  "metro": "Riverside-San Bernardino",
+  "city": "Rancho Cucamonga",
+  "state": "CA",
+  "lat": 34.09906,
+  "lng": -117.57005
+ },
+ {
+  "metro": "Riverside-San Bernardino",
+  "city": "Riverside",
+  "state": "CA",
+  "lat": 33.93726,
+  "lng": -117.41195
+ },
+ {
+  "metro": "Riverside-San Bernardino",
+  "city": "Newport Beach",
+  "state": "CA",
+  "lat": 33.6401,
+  "lng": -117.87216
+ },
+ {
+  "metro": "Baltimore",
+  "city": "Timonium",
+  "state": "MD",
+  "lat": 39.43203,
+  "lng": -76.63313
+ },
+ {
+  "metro": "Baltimore",
+  "city": "Columbia",
+  "state": "MD",
+  "lat": 39.20909,
+  "lng": -76.84519
+ },
+ {
+  "metro": "Baltimore",
+  "city": "Towson",
+  "state": "MD",
+  "lat": 39.40243,
+  "lng": -76.60244
+ },
+ {
+  "metro": "St. Louis",
+  "city": "St. Louis",
+  "state": "MO",
+  "lat": 38.61405,
+  "lng": -90.38212
+ },
+ {
+  "metro": "St. Louis",
+  "city": "Chesterfield",
+  "state": "MO",
+  "lat": 38.65972,
+  "lng": -90.57428
+ },
+ {
+  "metro": "St. Louis",
+  "city": "Clayton",
+  "state": "MO",
+  "lat": 38.63996,
+  "lng": -90.366
+ },
+ {
+  "metro": "Dallas-Fort Worth",
+  "city": "Dallas",
+  "state": "TX",
+  "lat": 32.87152,
+  "lng": -96.79239
+ },
+ {
+  "metro": "Dallas-Fort Worth",
+  "city": "Plano",
+  "state": "TX",
+  "lat": 33.05305,
+  "lng": -96.80472
+ },
+ {
+  "metro": "Dallas-Fort Worth",
+  "city": "Fort Worth",
+  "state": "TX",
+  "lat": 32.72641,
+  "lng": -97.36678
+ },
+ {
+  "metro": "Houston",
+  "city": "Houston",
+  "state": "TX",
+  "lat": 29.76509,
+  "lng": -95.44921
+ },
+ {
+  "metro": "Houston",
+  "city": "Sugar Land",
+  "state": "TX",
+  "lat": 29.59196,
+  "lng": -95.62968
+ },
+ {
+  "metro": "Houston",
+  "city": "The Woodlands",
+  "state": "TX",
+  "lat": 30.17117,
+  "lng": -95.47944
+ },
+ {
+  "metro": "Minneapolis",
+  "city": "Edina",
+  "state": "MN",
+  "lat": 44.88444,
+  "lng": -93.33106
+ },
+ {
+  "metro": "Minneapolis",
+  "city": "Minneapolis",
+  "state": "MN",
+  "lat": 44.96652,
+  "lng": -93.30819
+ },
+ {
+  "metro": "Minneapolis",
+  "city": "Wayzata",
+  "state": "MN",
+  "lat": 44.96725,
+  "lng": -93.50427
+ },
+ {
+  "metro": "Tampa",
+  "city": "Tampa",
+  "state": "FL",
+  "lat": 27.95928,
+  "lng": -82.48815
+ },
+ {
+  "metro": "Tampa",
+  "city": "St. Petersburg",
+  "state": "FL",
+  "lat": 27.80384,
+  "lng": -82.65806
+ },
+ {
+  "metro": "Tampa",
+  "city": "Clearwater",
+  "state": "FL",
+  "lat": 27.97343,
+  "lng": -82.73749
+ },
+ {
+  "metro": "San Francisco",
+  "city": "San Francisco",
+  "state": "CA",
+  "lat": 37.78355,
+  "lng": -122.42539
+ },
+ {
+  "metro": "San Francisco",
+  "city": "Walnut Creek",
+  "state": "CA",
+  "lat": 37.91351,
+  "lng": -122.04429
+ },
+ {
+  "metro": "San Francisco",
+  "city": "Oakland",
+  "state": "CA",
+  "lat": 37.82168,
+  "lng": -122.25066
+ },
+ {
+  "metro": "Detroit",
+  "city": "Troy",
+  "state": "MI",
+  "lat": 42.57008,
+  "lng": -83.14143
+ },
+ {
+  "metro": "Detroit",
+  "city": "West Bloomfield Township",
+  "state": "MI",
+  "lat": 42.54511,
+  "lng": -83.36586
+ },
+ {
+  "metro": "Detroit",
+  "city": "Birmingham",
+  "state": "MI",
+  "lat": 42.54482,
+  "lng": -83.21049
+ },
+ {
+  "metro": "Boston",
+  "city": "Boston",
+  "state": "MA",
+  "lat": 42.34874,
+  "lng": -71.06958
+ },
+ {
+  "metro": "Boston",
+  "city": "Wellesley",
+  "state": "MA",
+  "lat": 42.31182,
+  "lng": -71.26916
+ },
+ {
+  "metro": "Boston",
+  "city": "Newton",
+  "state": "MA",
+  "lat": 42.33775,
+  "lng": -71.20313
+ },
+ {
+  "metro": "Chicago",
+  "city": "Chicago",
+  "state": "IL",
+  "lat": 41.9003,
+  "lng": -87.6394
+ },
+ {
+  "metro": "Chicago",
+  "city": "Naperville",
+  "state": "IL",
+  "lat": 41.76579,
+  "lng": -88.16346
+ },
+ {
+  "metro": "Chicago",
+  "city": "Oakbrook Terrace",
+  "state": "IL",
+  "lat": 41.85187,
+  "lng": -87.97307
+ },
+ {
+  "metro": "Miami",
+  "city": "Boca Raton",
+  "state": "FL",
+  "lat": 26.37075,
+  "lng": -80.09356
+ },
+ {
+  "metro": "Miami",
+  "city": "Fort Lauderdale",
+  "state": "FL",
+  "lat": 26.13692,
+  "lng": -80.12846
+ },
+ {
+  "metro": "Miami",
+  "city": "Miami",
+  "state": "FL",
+  "lat": 25.75746,
+  "lng": -80.23183
+ },
+ {
+  "metro": "Philadelphia",
+  "city": "Philadelphia",
+  "state": "PA",
+  "lat": 39.95961,
+  "lng": -75.1533
+ },
+ {
+  "metro": "Philadelphia",
+  "city": "Bryn Mawr",
+  "state": "PA",
+  "lat": 40.02122,
+  "lng": -75.32461
+ },
+ {
+  "metro": "Philadelphia",
+  "city": "Cherry Hill Township",
+  "state": "NJ",
+  "lat": 39.90993,
+  "lng": -74.98903
+ },
+ {
+  "metro": "Atlanta",
+  "city": "Atlanta",
+  "state": "GA",
+  "lat": 33.84851,
+  "lng": -84.38374
+ },
+ {
+  "metro": "Atlanta",
+  "city": "Marietta",
+  "state": "GA",
+  "lat": 33.95723,
+  "lng": -84.51276
+ },
+ {
+  "metro": "Atlanta",
+  "city": "Alpharetta",
+  "state": "GA",
+  "lat": 34.07182,
+  "lng": -84.27955
+ },
+ {
+  "metro": "Seattle",
+  "city": "Bellevue",
+  "state": "WA",
+  "lat": 47.61696,
+  "lng": -122.17867
+ },
+ {
+  "metro": "Seattle",
+  "city": "Seattle",
+  "state": "WA",
+  "lat": 47.62967,
+  "lng": -122.33475
+ },
+ {
+  "metro": "Seattle",
+  "city": "Kirkland",
+  "state": "WA",
+  "lat": 47.68275,
+  "lng": -122.19778
+ },
+ {
+  "metro": "Austin",
+  "city": "Austin",
+  "state": "TX",
+  "lat": 30.31869,
+  "lng": -97.78629
+ },
+ {
+  "metro": "Austin",
+  "city": "Round Rock",
+  "state": "TX",
+  "lat": 30.52077,
+  "lng": -97.67444
+ },
+ {
+  "metro": "Austin",
+  "city": "West Lake Hills",
+  "state": "TX",
+  "lat": 30.28609,
+  "lng": -97.81496
+ },
+ {
+  "metro": "Phoenix",
+  "city": "Scottsdale",
+  "state": "AZ",
+  "lat": 33.60737,
+  "lng": -111.90608
+ },
+ {
+  "metro": "Phoenix",
+  "city": "Phoenix",
+  "state": "AZ",
+  "lat": 33.52547,
+  "lng": -112.02076
+ },
+ {
+  "metro": "Phoenix",
+  "city": "Chandler",
+  "state": "AZ",
+  "lat": 33.27521,
+  "lng": -111.85843
+ },
+ {
+  "metro": "San Diego",
+  "city": "San Diego",
+  "state": "CA",
+  "lat": 32.79478,
+  "lng": -117.17803
+ },
+ {
+  "metro": "San Diego",
+  "city": "Carlsbad",
+  "state": "CA",
+  "lat": 33.13205,
+  "lng": -117.30464
+ },
+ {
+  "metro": "San Diego",
+  "city": "La Jolla",
+  "state": "CA",
+  "lat": 32.86628,
+  "lng": -117.2446
+ },
+ {
+  "metro": "San Antonio",
+  "city": "San Antonio",
+  "state": "TX",
+  "lat": 29.57228,
+  "lng": -98.52771
+ },
+ {
+  "metro": "San Antonio",
+  "city": "New Braunfels",
+  "state": "TX",
+  "lat": 29.71688,
+  "lng": -98.11375
+ },
+ {
+  "metro": "San Antonio",
+  "city": "Boerne",
+  "state": "TX",
+  "lat": 29.76624,
+  "lng": -98.71393
+ },
+ {
+  "metro": "Washington DC",
+  "city": "Washington",
+  "state": "DC",
+  "lat": 38.90742,
+  "lng": -77.0451
+ },
+ {
+  "metro": "Washington DC",
+  "city": "McLean",
+  "state": "VA",
+  "lat": 38.93181,
+  "lng": -77.19805
+ },
+ {
+  "metro": "Washington DC",
+  "city": "Bethesda",
+  "state": "MD",
+  "lat": 38.99567,
+  "lng": -77.11269
+ },
+ {
+  "metro": "Denver",
+  "city": "Denver",
+  "state": "CO",
+  "lat": 39.72636,
+  "lng": -104.96414
+ },
+ {
+  "metro": "Denver",
+  "city": "Greenwood Village",
+  "state": "CO",
+  "lat": 39.61519,
+  "lng": -104.89575
+ },
+ {
+  "metro": "Denver",
+  "city": "Littleton",
+  "state": "CO",
+  "lat": 39.58998,
+  "lng": -105.0496
+ },
+ {
+  "metro": "Orlando",
+  "city": "Winter Park",
+  "state": "FL",
+  "lat": 28.59928,
+  "lng": -81.35688
+ },
+ {
+  "metro": "Orlando",
+  "city": "Orlando",
+  "state": "FL",
+  "lat": 28.51405,
+  "lng": -81.39453
+ },
+ {
+  "metro": "Orlando",
+  "city": "Lake Mary",
+  "state": "FL",
+  "lat": 28.76359,
+  "lng": -81.34801
+ },
+ {
+  "metro": "Charlotte",
+  "city": "Charlotte",
+  "state": "NC",
+  "lat": 35.14152,
+  "lng": -80.82716
+ },
+ {
+  "metro": "Charlotte",
+  "city": "Cornelius",
+  "state": "NC",
+  "lat": 35.47095,
+  "lng": -80.8818
+ },
+ {
+  "metro": "Charlotte",
+  "city": "Matthews",
+  "state": "NC",
+  "lat": 35.12149,
+  "lng": -80.71757
+ }
+]
