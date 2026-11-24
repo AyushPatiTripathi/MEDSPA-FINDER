@@ -174,5 +174,5 @@
     });
   }
 
-  window.MF = { TYPES, COL, LBL, esc, slug, mi, state, visible, ONBOARDED_BADGE_LABEL, crmHtml, crmBind, urlHtml, checkHtml, dateHtml, toLocalInput };
+  window.MF = { TYPES, COL, LBL, esc, slug, mi, state, visible, ONBOARDED_BADGE_LABEL, crmHtml, crmBind, urlHtml, checkHtml, dateHtml, toLocalInput, patchStatus, safeUrl };
 })();

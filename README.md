@@ -56,9 +56,9 @@ This data is stored in Postgres, not on disk, so it survives Render's restarts a
 
 Without `DATABASE_URL` the app still runs; the toggles just show an error when you try to save. Add `DATABASE_URL` (`sync: false`) to the Render service's env vars as well.
 
-### Table tab and meeting fields
+### Pipeline tab and meeting fields
 
-Each practice also has a meeting date and a meeting link (shown as "Join"), editable in the map popup, grid cards and the **Table** tab. The Table tab lists every practice (50 per page) with sortable columns, a name/city filter and a status filter, and every CRM field is editable inline. It opens sorted by meeting date: upcoming meetings soonest first, then past ones, then practices with no meeting.
+Each practice also has a meeting date and a meeting link (shown as "Join"). The **Pipeline** tab is a Kanban board with four stages: Not Contacted, Contacted, Meeting Set and Onboarded. Drag a card between columns to update it (each stage sets every flag up to that point), or click a card to open its details and edit the website, meeting date and link. A stats row and a name/city + metro filter sit above the board. The **List** toggle switches to a sortable, paginated table of the same filtered practices, with every field editable inline; it opens sorted by meeting date (upcoming first). Columns show the first 40 cards, with a "Show more" button.
 
 ### Bulk-importing websites
 

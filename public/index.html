@@ -17,7 +17,7 @@
   <nav class="tabs" role="tablist" aria-label="View">
     <button class="tab" data-tab="map" role="tab" aria-selected="true">Map</button>
     <button class="tab" data-tab="grid" role="tab" aria-selected="false">Grid</button>
-    <button class="tab" data-tab="table" role="tab" aria-selected="false">Table</button>
+    <button class="tab" data-tab="pipeline" role="tab" aria-selected="false">Pipeline</button>
   </nav>
   <div class="stats" id="stats">Loading…</div>
 </header>
@@ -56,24 +56,33 @@
     </div>
   </section>
 
-  <section id="view-table" class="view" role="tabpanel">
-    <div class="tablewrap">
-      <div class="table-bar">
-        <input type="search" id="tableSearch" placeholder="Filter by name or city…" aria-label="Filter by name or city">
-        <select id="tableStatus" aria-label="Status filter">
-          <option value="all">All</option>
-          <option value="not_contacted">Not contacted</option>
-          <option value="contacted">Contacted</option>
-          <option value="meeting_set">Meeting set</option>
-          <option value="onboarded">Onboarded</option>
-        </select>
-        <span id="tableCount" class="muted"></span>
-        <span class="pager"><button class="btn" id="tablePrev" type="button">&lsaquo; Prev</button> <span id="tablePage"></span> <button class="btn" id="tableNext" type="button">Next &rsaquo;</button></span>
+  <section id="view-pipeline" class="view" role="tabpanel">
+    <div class="pipe">
+      <div class="pipe-head">
+        <div class="pstats" id="pipeStats" aria-live="polite"></div>
+        <div class="vtoggle" role="group" aria-label="Pipeline view">
+          <button type="button" data-v="board" aria-pressed="true">Board</button>
+          <button type="button" data-v="list" aria-pressed="false">List</button>
+        </div>
       </div>
-      <div class="table-scroll"><table class="crmtable" id="crmTable"></table></div>
+      <div class="table-bar">
+        <input type="search" id="pipeSearch" placeholder="Filter by name or city…" aria-label="Filter by name or city">
+        <select id="pipeMetro" aria-label="Metro filter"><option value="">All metros</option></select>
+        <span class="pager" id="pipePager" hidden><button class="btn" id="pipePrev" type="button">&lsaquo; Prev</button> <span id="pipePage"></span> <button class="btn" id="pipeNext" type="button">Next &rsaquo;</button></span>
+      </div>
+      <div id="pipeBoard" class="board"></div>
+      <div id="pipeList" class="table-scroll" hidden><table class="crmtable" id="crmTable"></table></div>
     </div>
   </section>
 </main>
+
+<div id="practiceModal" class="modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="pmTitle">
+    <button class="modal-close" id="pmClose" aria-label="Close">&times;</button>
+    <div id="pmBody"></div>
+  </div>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
 <div id="planModal" class="modal" hidden>
   <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="planTitle">
@@ -88,7 +97,7 @@
 <script src="/common.js"></script>
 <script src="/map.js"></script>
 <script src="/grid.js"></script>
-<script src="/table.js"></script>
+<script src="/pipeline.js"></script>
 <script src="/export.js"></script>
 <script src="/app.js"></script>
 </body>
