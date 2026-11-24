@@ -6,6 +6,7 @@ const fs = require('fs');
 
 const { Pool } = require('pg');
 const { normalizeUrl } = require('./url');
+const { cascade, ORDER } = require('./cascade');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -104,20 +105,36 @@ app.patch('/api/practices/:id/status', async (req, res) => {
       fields.meeting_date = d.toISOString();
     }
   }
-  const cols = Object.keys(fields);
-  if (!cols.length) return res.status(400).json({ error: 'Send at least one of: ' + STATUS_COLS.join(', ') + '' });
+  if (!Object.keys(fields).length) return res.status(400).json({ error: 'Send at least one of: ' + STATUS_COLS.join(', ') });
 
+  let client;
   try {
-    // Only the columns present in the request are overwritten on conflict.
+    client = await pool.connect();
+    await client.query('BEGIN');
+    // Lock the row so concurrent edits can't interleave and break the stage cascade.
+    await client.query('INSERT INTO practice_status (practice_id) VALUES ($1) ON CONFLICT DO NOTHING', [id]);
+    const cur = (await client.query('SELECT contacted, meeting_set, onboarded FROM practice_status WHERE practice_id = $1 FOR UPDATE', [id])).rows[0];
+    const flagsIn = {};
+    ORDER.forEach((k) => { if (k in fields) flagsIn[k] = fields[k]; });
+    const c = cascade(cur, flagsIn);
+    if (c.error) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: c.error });
+    }
+    const set = { ...fields, ...c.flags };
+    const cols = Object.keys(set);
     const sql =
-      `INSERT INTO practice_status (practice_id, ${cols.join(', ')}) VALUES ($1, ${cols.map((_, i) => '$' + (i + 2)).join(', ')}) ` +
-      `ON CONFLICT (practice_id) DO UPDATE SET ${cols.map((c) => `${c} = EXCLUDED.${c}`).join(', ')}, updated_at = now() ` +
-      `RETURNING ${STATUS_COLS.join(', ')}`;
-    const { rows } = await pool.query(sql, [id, ...cols.map((c) => fields[c])]);
+      `UPDATE practice_status SET ${cols.map((col, i) => `${col} = $${i + 2}`).join(', ')}, updated_at = now() ` +
+      `WHERE practice_id = $1 RETURNING ${STATUS_COLS.join(', ')}`;
+    const { rows } = await client.query(sql, [id, ...cols.map((col) => set[col])]);
+    await client.query('COMMIT');
     res.json({ ...practice, ...pickStatus(rows[0]) });
   } catch (err) {
+    if (client) await client.query('ROLLBACK').catch(() => {});
     console.error('practice_status write failed:', err.message);
     res.status(500).json({ error: 'Could not save status: ' + err.message });
+  } finally {
+    if (client) client.release();
   }
 });
 

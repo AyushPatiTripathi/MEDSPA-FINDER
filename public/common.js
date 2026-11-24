@@ -141,11 +141,23 @@
         return false;
       }
     };
+    // Stages are ordered (contacted -> meeting set -> onboarded); the server enforces it.
+    // Earlier stages are shown checked and locked while a later one is on.
+    const syncFlags = () => {
+      root.querySelectorAll('input[data-f]').forEach((box) => {
+        const f = box.dataset.f;
+        box.checked = !!p[f];
+        box.disabled = (f === 'contacted' && !!(p.meeting_set || p.onboarded)) || (f === 'meeting_set' && !!p.onboarded);
+        box.title = box.disabled ? 'Implied by a later stage; turn the later stage off first' : '';
+      });
+    };
     root.querySelectorAll('input[data-f]').forEach((box) => {
       box.onchange = async () => {
-        if (!(await save({ [box.dataset.f]: box.checked }))) box.checked = !box.checked;
+        await save({ [box.dataset.f]: box.checked });
+        syncFlags(); // on success shows the cascaded values; on failure reverts the box
       };
     });
+    syncFlags();
     root.querySelectorAll('input[data-d]').forEach((inp) => {
       inp.onchange = async () => {
         const body = { meeting_date: inp.value ? new Date(inp.value).toISOString() : null };

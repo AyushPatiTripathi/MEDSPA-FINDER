@@ -76,6 +76,8 @@
   }
 
   // ------------------------------------------------------------- board
+  const ICON_CAL = '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 7h12M5 1.5v3M11 1.5v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+  const ICON_LINK = '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M9 3h4v4M13 3L7.5 8.5M12 9.5V12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const fmtMeeting = (p) =>
     p.meeting_date ? new Date(p.meeting_date).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Date TBD';
 
@@ -85,12 +87,12 @@
     const hasMeeting = p.meeting_set || p.meeting_date;
     const chip = hasMeeting
       ? link
-        ? `<a class="mchip" href="${esc(link)}" target="_blank" rel="noopener noreferrer" title="Open meeting link">&#128197; ${esc(fmtMeeting(p))}</a>`
-        : `<span class="mchip">&#128197; ${esc(fmtMeeting(p))}</span>`
+        ? `<a class="mchip" href="${esc(link)}" target="_blank" rel="noopener noreferrer" title="Open meeting link">${ICON_CAL}${esc(fmtMeeting(p))}</a>`
+        : `<span class="mchip">${ICON_CAL}${esc(fmtMeeting(p))}</span>`
       : '';
     return `<article class="kcard${pending.has(p.id) ? ' saving' : ''}${flashId === p.id ? ' flash' : ''}" draggable="true" data-id="${esc(p.id)}" tabindex="0">
       <div class="ktop"><i class="kdot" style="background:${COL[p.type]}" title="${esc(LBL[p.type] || p.type)}"></i><b class="kname">${esc(p.name)}</b>${p.onboarded ? `<span class="agBadge">${esc(ONBOARDED_BADGE_LABEL)}</span>` : ''}</div>
-      <div class="kmeta">${esc(p.city)}, ${esc(p.state)}${site ? ` <a class="ksite" href="${esc(site)}" target="_blank" rel="noopener noreferrer" title="${esc(site)}" aria-label="Website">&#8599;</a>` : ''}</div>
+      <div class="kmeta"><span>${esc(p.city)}, ${esc(p.state)}</span>${site ? `<a class="ksite" href="${esc(site)}" target="_blank" rel="noopener noreferrer" title="${esc(site)}" aria-label="Website">${ICON_LINK}</a>` : ''}</div>
       ${chip ? `<div class="kchips">${chip}</div>` : ''}
     </article>`;
   }
@@ -106,10 +108,11 @@
       return `<section class="kcol" data-stage="${i}" aria-label="${st.label}">
         <header class="khead"><span>${st.label}</span><span class="kcount">${list.length.toLocaleString()}</span></header>
         <div class="kbody">${
-          shown.map(cardHtml).join('') || '<div class="kempty">No practices here yet</div>'
-        }${more > 0 ? `<button type="button" class="kmore" data-i="${i}">Show ${Math.min(CARD_STEP, more)} more (${more.toLocaleString()} left)</button>` : ''}</div>
+          shown.map(cardHtml).join('') || '<div class="kempty"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M4 7l8-4 8 4v10l-8 4-8-4z M4 7l8 4 8-4 M12 11v10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg><span>No practices here yet</span></div>'
+        }${more > 0 ? `<button type="button" class="pbtn kmore" data-i="${i}">Show ${Math.min(CARD_STEP, more)} more (${more.toLocaleString()} left)</button>` : ''}</div>
       </section>`;
     }).join('');
+    $('pipeBoard').removeAttribute('aria-busy');
     wireBoard();
   }
 
@@ -149,14 +152,17 @@
     });
   }
 
-  let toastTimer;
+  const TOAST_MS = 3200;
   function toast(text, err) {
-    const t = $('toast');
-    t.textContent = text;
-    t.className = 'toast' + (err ? ' err' : '');
-    t.hidden = false;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => (t.hidden = true), err ? 4500 : 1800);
+    const el = document.createElement('div');
+    el.className = 'toast' + (err ? ' err' : ' ok');
+    el.innerHTML = `<span class="ticon">${err ? '!' : '\u2713'}</span><span class="tmsg"></span>`;
+    el.querySelector('.tmsg').textContent = text;
+    $('toasts').appendChild(el);
+    setTimeout(() => {
+      el.classList.add('out');
+      setTimeout(() => el.remove(), 250);
+    }, TOAST_MS);
   }
 
   async function move(p, idx) {
@@ -179,17 +185,39 @@
   let panelP = null;
   function openPanel(p) {
     panelP = p;
-    const addr = [p.address].filter(Boolean).join('');
-    $('pmBody').innerHTML = `<h2 id="pmTitle">${esc(p.name)}</h2>
-      <div class="tagline"><span class="dot" style="background:${COL[p.type]}"></span>${esc(LBL[p.type] || p.type)}</div>
-      <div class="meta">${p.rating ?? '–'}★ (${(p.reviews || 0).toLocaleString()} reviews)</div>
-      <div class="addr">${esc(addr)}</div>
-      ${p.phone ? `<a class="phone" href="tel:${esc(p.phone.replace(/[^+\d]/g, ''))}">${esc(p.phone)}</a>` : ''}
-      ${crmHtml(p)}`;
+    const sub = [LBL[p.type] || p.type, `${p.city}, ${p.state}`, p.rating != null ? `${p.rating}\u2605 (${(p.reviews || 0).toLocaleString()})` : ''].filter(Boolean).join(' \u00B7 ');
+    $('pmBody').innerHTML = `<header class="pm-head">
+        <i class="kdot" style="background:${COL[p.type]}"></i>
+        <div class="pm-titles"><h2 id="pmTitle">${esc(p.name)}</h2><div class="pm-sub">${esc(sub)}</div></div>
+        <button type="button" class="pm-x" id="pmClose" aria-label="Close">&times;</button>
+      </header>
+      <div class="pm-body">
+        <div class="pm-contact">${esc(p.address || '')}${p.phone ? ` &middot; <a class="phone" href="tel:${esc(p.phone.replace(/[^+\d]/g, ''))}">${esc(p.phone)}</a>` : ''}</div>
+        <section class="pm-group"><h3>Stage</h3>
+          <div class="pm-switches">${[['contacted', 'Contacted'], ['meeting_set', 'Meeting set up'], ['onboarded', 'Onboarded']].map(([k, l]) => checkHtml(p, k, l)).join('')}</div>
+        </section>
+        <section class="pm-group"><h3>Meeting</h3>
+          <div class="pm-field"><label for="pmDate">Date &amp; time</label>${dateHtml(p).replace('<input ', '<input id="pmDate" ')}</div>
+          <div class="pm-field"><span class="lbl">Meeting link</span>${urlHtml(p, 'meeting_link')}</div>
+        </section>
+        <section class="pm-group"><h3>Website</h3>
+          <div class="pm-field">${urlHtml(p, 'website')}</div>
+        </section>
+      </div>
+      <footer class="pm-foot"><span class="crm-msg" role="status" aria-live="polite"></span><button type="button" class="pbtn primary" id="pmDone">Done</button></footer>`;
     crmBind($('pmBody'), p, refresh);
-    $('practiceModal').hidden = false;
+    $('pmClose').onclick = $('pmDone').onclick = closePanel;
+    const m = $('practiceModal');
+    m.classList.add('open');
+    m.setAttribute('aria-hidden', 'false');
+    $('pmDone').focus();
   }
-  const closePanel = () => { $('practiceModal').hidden = true; panelP = null; };
+  function closePanel() {
+    const m = $('practiceModal');
+    m.classList.remove('open');
+    m.setAttribute('aria-hidden', 'true');
+    panelP = null;
+  }
 
   // ------------------------------------------------------------- list view
   const COLUMNS = [
@@ -295,7 +323,6 @@
           refresh();
         };
       });
-      $('pmClose').onclick = closePanel;
       $('practiceModal').onclick = (e) => { if (e.target === $('practiceModal')) closePanel(); };
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && panelP) closePanel(); });
       refresh();

@@ -18,6 +18,21 @@ CREATE TABLE IF NOT EXISTS practice_status (
 ALTER TABLE practice_status ADD COLUMN IF NOT EXISTS meeting_date TIMESTAMPTZ;
 ALTER TABLE practice_status ADD COLUMN IF NOT EXISTS meeting_link TEXT;`;
 
+// Stages are ordered (contacted -> meeting_set -> onboarded). Repair rows left in an
+// invalid state by earlier versions (highest stage wins), then lock the rule in with a CHECK.
+const FIX_SQL = `
+UPDATE practice_status SET
+  meeting_set = meeting_set OR onboarded,
+  contacted   = contacted OR meeting_set OR onboarded
+WHERE (onboarded AND NOT meeting_set) OR ((meeting_set OR onboarded) AND NOT contacted);`;
+const CHECK_SQL = `
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'practice_status_stage_chk') THEN
+    ALTER TABLE practice_status ADD CONSTRAINT practice_status_stage_chk
+      CHECK ((NOT onboarded OR meeting_set) AND (NOT meeting_set OR contacted));
+  END IF;
+END $$;`;
+
 (async () => {
   if (!process.env.DATABASE_URL) {
     console.error('DATABASE_URL is not set. Add your Neon connection string to .env (see README).');
@@ -27,6 +42,9 @@ ALTER TABLE practice_status ADD COLUMN IF NOT EXISTS meeting_link TEXT;`;
   try {
     await client.connect();
     await client.query(SQL);
+    const fixed = await client.query(FIX_SQL);
+    await client.query(CHECK_SQL);
+    console.log(`Corrected ${fixed.rowCount} row(s) with an invalid stage combination.`);
     console.log('practice_status table is ready (schema up to date).');
   } catch (e) {
     console.error('Migration failed: ' + e.message);

@@ -67,3 +67,7 @@ node scripts/import-websites.js websites.csv
 ```
 
 The CSV needs `id` (matching `id` in `data/practices.json`) and `website` columns. It only sets the website on existing practices; rows with an unknown id, a blank website or an invalid URL are skipped and counted in the summary. It writes straight to Postgres (`DATABASE_URL`) and is safe to re-run.
+
+### Stage rules
+
+Stages are ordered: contacted, then meeting set, then onboarded. The API enforces this on every update: turning a stage on turns on all earlier ones, and turning one off turns off all later ones (a request that contradicts itself gets a 400). `npm run migrate` repairs any rows saved in an invalid state by earlier versions (it prints how many) and adds a database CHECK so they can't reappear. In the UI, stages implied by a later one show as locked on.
