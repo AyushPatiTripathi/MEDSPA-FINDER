@@ -3,7 +3,7 @@
 // individual practices as you zoom in — this replaces the earlier
 // hand-rolled drill-down with actual geographic zoom.
 (function () {
-  const { TYPES, COL, LBL, esc, mi, state, visible } = window.MF;
+  const { TYPES, COL, LBL, esc, mi, state, visible, ONBOARDED_BADGE_LABEL, crmHtml, crmBind } = window.MF;
 
   let map, cluster, pinMode = false, pinMarker = null, pinCircle = null, pinLines = [];
   let radius = 5;
@@ -51,9 +51,19 @@
     });
   }
 
-  function markerIcon(type) {
+  // Onboarded practices keep their type colour but get a gold ring and a small label.
+  function markerIcon(p) {
+    if (p.onboarded) {
+      return L.divIcon({
+        html: `<div class="dotMarker onboarded" style="background:${COL[p.type]}"></div><span class="agLabel">${esc(ONBOARDED_BADGE_LABEL)}</span>`,
+        className: 'onboardedIcon',
+        iconSize: [22, 22],
+        iconAnchor: [11, 11],
+        popupAnchor: [0, -8],
+      });
+    }
     return L.divIcon({
-      html: `<div class="dotMarker" style="background:${COL[type]}"></div>`,
+      html: `<div class="dotMarker" style="background:${COL[p.type]}"></div>`,
       className: '',
       iconSize: [16, 16],
       popupAnchor: [0, -6],
@@ -67,14 +77,21 @@
       <div class="meta">${p.rating ?? '–'}★ (${(p.reviews || 0).toLocaleString()} reviews)</div>
       <div class="addr">${esc(p.address)}</div>
       ${p.phone ? `<a class="phone" href="tel:${esc(p.phone.replace(/[^+\d]/g, ''))}">${esc(p.phone)}</a>` : ''}
+      ${crmHtml(p)}
     </div>`;
   }
 
   function refreshMarkers() {
     cluster.clearLayers();
     const markers = visible(state.practices).map((p) => {
-      const m = L.marker([p.lat, p.lng], { icon: markerIcon(p.type), ptype: p.type });
-      m.bindPopup(popupHtml(p));
+      const m = L.marker([p.lat, p.lng], { icon: markerIcon(p), ptype: p.type });
+      // Built fresh on each open so it always reflects the latest saved status.
+      m.bindPopup(() => {
+        const el = document.createElement('div');
+        el.innerHTML = popupHtml(p);
+        crmBind(el, p, () => m.setIcon(markerIcon(p)));
+        return el;
+      });
       return m;
     });
     cluster.addLayers(markers);

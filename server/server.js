@@ -4,10 +4,13 @@ const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
 
+const { Pool } = require('pg');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_PATH = path.join(__dirname, '..', 'data', 'practices.json');
 
+let practiceIds = new Set();
 let DATA = { generated: null, source: null, practices: [] };
 
 function loadData() {
@@ -19,6 +22,7 @@ function loadData() {
       source: parsed.source || null,
       practices: Array.isArray(parsed.practices) ? parsed.practices : [],
     };
+    practiceIds = new Set(DATA.practices.map((p) => p.id));
     console.log(`Loaded ${DATA.practices.length} practices (generated ${DATA.generated})`);
   } catch (err) {
     console.error('Failed to load practices data from', DATA_PATH, err.message);
@@ -27,6 +31,14 @@ function loadData() {
 }
 
 loadData();
+
+// ---- Outreach CRM status (Postgres) -----------------------------------
+// Mutable per-practice fields live in Postgres (not practices.json), so
+// re-importing practices can never touch them and Render restarts don't lose them.
+const pool = process.env.DATABASE_URL ? new Pool({ connectionString: process.env.DATABASE_URL, max: 5 }) : null;
+if (!pool) console.warn('DATABASE_URL not set: outreach status tracking is disabled.');
+const STATUS_DEFAULTS = { website: null, contacted: false, meeting_set: false, onboarded: false };
+const pickStatus = (row) => (row ? { website: row.website, contacted: row.contacted, meeting_set: row.meeting_set, onboarded: row.onboarded } : STATUS_DEFAULTS);
 
 app.use(compression());
 app.use(express.json({ limit: '10kb' }));
@@ -45,9 +57,60 @@ app.get('/api/health', (req, res) => {
 // paginating, and lets the client do instant filtering/aggregation.
 // If the dataset grows into the tens of thousands (the planned grid-sweep
 // expansion), split this into /api/cities + /api/cities/:slug/practices.
-app.get('/api/practices', (req, res) => {
-  res.set('Cache-Control', 'public, max-age=300');
-  res.json(DATA);
+app.get('/api/practices', async (req, res) => {
+  // Not cacheable: the CRM fields change whenever someone toggles a status.
+  res.set('Cache-Control', 'no-store');
+  const status = new Map();
+  if (pool) {
+    try {
+      const { rows } = await pool.query('SELECT practice_id, website, contacted, meeting_set, onboarded FROM practice_status');
+      rows.forEach((r) => status.set(r.practice_id, r));
+    } catch (err) {
+      console.error('practice_status read failed:', err.message);
+    }
+  }
+  res.json({ ...DATA, practices: DATA.practices.map((p) => ({ ...p, ...pickStatus(status.get(p.id)) })) });
+});
+
+app.patch('/api/practices/:id/status', async (req, res) => {
+  const { id } = req.params;
+  const practice = practiceIds.has(id) && DATA.practices.find((p) => p.id === id);
+  if (!practice) return res.status(400).json({ error: 'Unknown practice id' });
+  if (!pool) return res.status(503).json({ error: 'Status tracking is not configured: set DATABASE_URL in .env (see README).' });
+
+  const body = req.body || {};
+  const fields = {};
+  for (const k of ['contacted', 'meeting_set', 'onboarded']) {
+    if (k in body) {
+      if (typeof body[k] !== 'boolean') return res.status(400).json({ error: `${k} must be true or false` });
+      fields[k] = body[k];
+    }
+  }
+  if ('website' in body) {
+    let w = body.website === null ? '' : String(body.website).trim();
+    if (w && !/^https?:\/\//i.test(w)) w = 'https://' + w;
+    if (w) {
+      let ok = w.length <= 500;
+      try { ok = ok && /^https?:$/.test(new URL(w).protocol) && new URL(w).hostname.includes('.'); } catch (_) { ok = false; }
+      if (!ok) return res.status(400).json({ error: 'website must be a valid http(s) URL' });
+    }
+    fields.website = w || null;
+  }
+  const cols = Object.keys(fields);
+  if (!cols.length) return res.status(400).json({ error: 'Send at least one of: website, contacted, meeting_set, onboarded' });
+
+  try {
+    // Only the columns present in the request are overwritten on conflict.
+    const sql =
+      `INSERT INTO practice_status (practice_id, ${cols.join(', ')}) VALUES ($1, ${cols.map((_, i) => '$' + (i + 2)).join(', ')}) ` +
+      `ON CONFLICT (practice_id) DO UPDATE SET ${cols.map((c) => `${c} = EXCLUDED.${c}`).join(', ')}, updated_at = now() ` +
+      'RETURNING website, contacted, meeting_set, onboarded';
+    const { rows } = await pool.query(sql, [id, ...cols.map((c) => fields[c])]);
+    res.json({ ...practice, ...pickStatus(rows[0]) });
+  } catch (err) {
+    console.error('practice_status write failed:', err.message);
+    res.status(500).json({ error: 'Could not save status: ' + err.message });
+  }
 });
 
 // ---- CSV export -------------------------------------------------------

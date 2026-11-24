@@ -3,7 +3,7 @@
 // median split of each city's practices (k-d tree), not real
 // neighbourhoods, so counts stay even across tiles.
 (function () {
-  const { TYPES, COL, LBL, esc, slug, state, visible } = window.MF;
+  const { TYPES, COL, LBL, esc, slug, state, visible, ONBOARDED_BADGE_LABEL, crmHtml, crmBind } = window.MF;
 
   function initials(n) {
     const w = n.replace(/[^A-Za-z0-9 ]/g, ' ').trim().split(/\s+/);
@@ -145,18 +145,33 @@
       <h2 class="hd">${L.length} practice${L.length === 1 ? '' : 's'}</h2><p class="sub">Most-reviewed first.</p>
       <div class="cards">${
         L.map(
-          (p) => `<article class="card">
+          (p) => `<article class="card" data-id="${esc(p.id)}">
         <div class="top"><div class="avatar" style="background:${COL[p.type]}">${initials(p.name)}</div>
-        <div><b>${esc(p.name)}</b><br><span class="tag"><i style="background:${COL[p.type]}"></i>${esc(LBL[p.type])}</span></div></div>
+        <div><b>${esc(p.name)}</b>${p.onboarded ? ` <span class="agBadge">${esc(ONBOARDED_BADGE_LABEL)}</span>` : ''}<br><span class="tag"><i style="background:${COL[p.type]}"></i>${esc(LBL[p.type])}</span></div></div>
         <div class="rating">${p.rating ?? '–'}★ <span class="muted">(${(p.reviews || 0).toLocaleString()} reviews)</span></div>
         <div class="addr">${esc(p.address)}</div>
         ${p.phone ? `<a class="phone" href="tel:${esc(p.phone.replace(/[^+\d]/g, ''))}">${esc(p.phone)}</a>` : ''}
+        ${crmHtml(p)}
       </article>`
         ).join('') || '<p class="empty">No practices match your search or filters.</p>'
       }</div>`;
     root().querySelector('#toHome').onclick = (e) => { e.preventDefault(); location.hash = 'grid'; };
     const toCity = root().querySelector('#toCity');
     if (toCity) toCity.onclick = (e) => { e.preventDefault(); location.hash = 'grid-city-' + slug(key); };
+    const byId = new Map(L.map((p) => [p.id, p]));
+    root().querySelectorAll('article.card').forEach((card) => {
+      const p = byId.get(card.dataset.id);
+      crmBind(card, p, () => {
+        const name = card.querySelector('.top b');
+        let badge = card.querySelector('.agBadge');
+        if (p.onboarded && !badge) {
+          badge = document.createElement('span');
+          badge.className = 'agBadge';
+          badge.textContent = ONBOARDED_BADGE_LABEL;
+          name.after(' ', badge);
+        } else if (!p.onboarded && badge) badge.remove();
+      });
+    });
     mountChips(() => renderSector(key, idx));
   }
 

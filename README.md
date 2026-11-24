@@ -43,3 +43,15 @@ node scripts/import-practices.js list.csv --force        # re-import an already-
 - **Dedup:** exact name + address matches are skipped. Possible duplicates (same zip with a similar name, or within ~50 m of an existing practice) are not added; they are written to `data/needs-review.json`.
 - **`needs-review.json`:** each entry has the incoming row and the existing practices it may duplicate, with the reason. Inspect them: if it's a genuine new practice, add it to `data/practices.json` by hand; otherwise delete the entry. The script appends to this file, so clear entries you've dealt with.
 - **Re-runs:** imported files are tracked by hash in `data/.imported-files.json`; the script refuses to import the same file twice without `--force`. Imported rows have no rating or review data. Restart the server or call `/api/reload` to pick up new data.
+
+## Outreach tracking (website, contacted / meeting set / onboarded)
+
+Each practice has a website field and three toggles (Contacted, Meeting set up, Onboarded), shown in the map popup and on grid cards. Onboarded practices get an "AG" badge in the grid and a gold ring with an "AG" label on the map (change `ONBOARDED_BADGE_LABEL` in `public/common.js` to rename it).
+
+This data is stored in Postgres, not on disk, so it survives Render's restarts and redeploys. It lives in its own `practice_status` table keyed by practice id, so importing more practices never touches it.
+
+1. Create a free database at https://neon.tech (no credit card, doesn't expire) and copy the connection string from the dashboard.
+2. Put it in `.env` (and in Render's environment variables) as `DATABASE_URL`. It looks like `postgresql://user:password@ep-xxxx.us-east-2.aws.neon.tech/neondb?sslmode=require`.
+3. Run `npm run migrate` once to create the table (safe to re-run).
+
+Without `DATABASE_URL` the app still runs; the toggles just show an error when you try to save. Add `DATABASE_URL` (`sync: false`) to the Render service's env vars as well.
